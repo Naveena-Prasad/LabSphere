@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabSphere | Multi-Lab Equipment & Session Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .view-section { display: none; }
+        .view-section.active-view { display: block; }
+        #landingScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; z-index: 2000; display: flex; justify-content: center; align-items: center;
+        }
+        .landing-card {
+            background: white; padding: 35px; border-radius: 12px; width: 450px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<!-- INITIAL LANDING / MULTI-LAB SELECTION SCREEN -->
+<div id="landingScreen">
+    <div class="landing-card">
+        <div style="font-size: 35px; color: #2563eb; margin-bottom: 10px;"><i class="fa-solid fa-microscope"></i></div>
+        <h2 style="color: #1e293b; margin-bottom: 5px;">Lab<span style="color: #2563eb;">Sphere</span></h2>
+        <p style="color: #64748b; font-size: 13px; margin-bottom: 20px;">Select Laboratory Department & Portal Mode</p>
+        
+        <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+            <label style="font-size: 13px; font-weight: 600;">Choose Laboratory:</label>
+            <select id="globalLabSelect" class="form-control">
+                <option value="Electronics Lab">Electronics Lab</option>
+                <option value="Electrical Lab">Electrical Lab</option>
+                <option value="Digital Electronics Lab">Digital Electronics Lab</option>
+                <option value="Physics Lab">Physics Lab</option>
+                <option value="Chemistry Lab">Chemistry Lab</option>
+            </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="selectRole('student')" style="background: #2563eb; color: white; border: none; padding: 11px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fa-solid fa-user-graduate"></i> Enter as Student (Lab Session)
+            </button>
+            <button onclick="openStaffLoginModal()" style="background: #16a34a; color: white; border: none; padding: 11px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fa-solid fa-user-shield"></i> Lab Assistant / Staff Login
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR NAVIGATION -->
+<aside class="sidebar">
+    <div class="brand">
+        <i class="fa-solid fa-microscope"></i>
+        <h2>Lab<span class="highlight">Sphere</span></h2>
+    </div>
+    <ul class="nav-links" id="sidebarNavLinks">
+        <li class="active" id="navDash"><a href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li id="navInv"><a href="#" onclick="switchTab('inventory')"><i class="fa-solid fa-boxes-stacked"></i> Lab Inventory</a></li>
+        <li id="navBook"><a href="#" onclick="switchTab('bookings')"><i class="fa-solid fa-book-bookmark"></i> <span id="sidebarTabName">Equipment Booking</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <p><i class="fa-solid fa-flask"></i> <span id="activeLabLabel" style="font-weight: 600;">Electronics Lab</span></p>
+        <p style="margin-top: 4px;"><i class="fa-solid fa-circle-check"></i> Role: <span id="currentModeLabel">Student</span></p>
+        <button onclick="returnToLanding()" style="margin-top: 10px; background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; width: 100%;">Switch Lab / Role</button>
+    </div>
+</aside>
+
+<!-- MAIN CONTENT AREA -->
+<main class="main-content">
+    <header class="top-header">
+        <div class="header-title">
+            <h1 id="pageMainTitle">Student Lab Session Portal</h1>
+            <p>Jyothi Engineering College | 3-Hour Practical Lab Management</p>
+        </div>
+        <div class="user-profile">
+            <div class="avatar" id="headerAvatar"><i class="fa-solid fa-user-graduate"></i></div>
+            <span id="roleBadgeText">Student User</span>
+        </div>
+    </header>
+
+    <!-- TAB 1: DASHBOARD -->
+    <div id="tab-dashboard" class="view-section active-view">
+        <section class="stats-container">
+            <div class="stat-card">
+                <div class="icon-box blue"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="stat-info">
+                    <h3>Active Lab</h3>
+                    <p class="stat-value" id="statLabName" style="font-size: 18px;">Electronics</p>
+                    <span class="trend positive"><i class="fa-solid fa-clock"></i> 3-Hour Session Mode</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-box green"><i class="fa-solid fa-clipboard-user"></i></div>
+                <div class="stat-info">
+                    <h3>Active Check-Outs</h3>
+                    <p class="stat-value" id="statActiveCount">0 Sessions</p>
+                    <span class="trend positive"><i class="fa-solid fa-check"></i> Live Tracked</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-box orange"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="stat-info">
+                    <h3>Damage Policy</h3>
+                    <p class="stat-value">Staff Inspection</p>
+                    <span class="trend neutral">Verified upon return request</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-circle-info"></i> Practical Session Guidelines</h2>
+                <p>Rules for issuing and returning components during lab hours.</p>
+            </div>
+            <div style="padding: 15px 0; color: #334155; line-height: 1.6;">
+                <p>Students must request necessary equipment for their current 3-hour lab session. After session completion, students click <strong>'Request Return'</strong> on their portal, which notifies the Lab Assistant for inspection and verification.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: LIVE INVENTORY -->
+    <div id="tab-inventory" class="view-section">
+        <section class="table-section">
+            <div class="panel">
+                <div class="panel-header space-between">
+                    <div>
+                        <h2><i class="fa-solid fa-boxes-stacked"></i> Lab Inventory Stock</h2>
+                        <p>Available hardware and components for the selected lab</p>
+                    </div>
+                </div>
+                
+                <!-- STAFF MANUAL ENTRY FORM (Visible only to Staff) -->
+                <div id="staffManualEntryBox" style="display: none; background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #cbd5e1;">
+                    <h3 style="font-size: 16px; color: #16a34a; margin-bottom: 15px;"><i class="fa-solid fa-pen-to-square"></i> Staff Inventory & Stock Management</h3>
+                    <form id="manualStockForm" onsubmit="addNewOrUpdateInventory(event)">
+                        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 13px; font-weight: 600;">Equipment Code:</label>
+                                <input type="text" id="manEqId" class="form-control" placeholder="e.g., EQ103" required style="text-transform: uppercase;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 13px; font-weight: 600;">Equipment Name:</label>
+                                <input type="text" id="manEqName" class="form-control" placeholder="e.g., Burette / Oscilloscope" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 13px; font-weight: 600;">Quantity:</label>
+                                <input type="number" id="manEqQty" class="form-control" min="1" value="10" required>
+                            </div>
+                        </div>
+                        <button type="submit" style="background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                            <i class="fa-solid fa-circle-plus"></i> Add / Update Inventory
+                        </button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Equipment Name</th>
+                                <th>Available Stock</th>
+                                <th>Status</th>
+                                <th id="tableActionColHead">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- TAB 3: EQUIPMENT BOOKINGS & RETURN VERIFICATION -->
+    <div id="tab-bookings" class="view-section">
+        <!-- Student Checkout Form -->
+        <div class="panel action-panel" id="studentCheckoutContainer" style="margin-bottom: 20px;">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-laptop-code"></i> Student Lab Check-Out Form</h2>
+                <p>Request items for the current 3-hour practical session</p>
+            </div>
+            
+            <form id="expoCheckoutForm" onsubmit="handlecheckout(event)">
+                <div class="form-group">
+                    <label for="eqSelect"><i class="fa-solid fa-barcode"></i> Select Equipment / Component:</label>
+                    <select id="eqSelect" class="form-control">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentId"><i class="fa-solid fa-id-card"></i> Student ID / Roll Number:</label>
+                    <input type="text" id="studentId" class="form-control" placeholder="e.g., CSE2026042" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-clock"></i> Session Duration:</label>
+                    <input type="text" class="form-control" value="3 Hours (Standard Lab Session)" readonly style="background: #ffffff; color: #0f172a; font-weight: 600; border: 1px solid #cbd5e1;">
+                </div>
+
+                <button type="submit" class="btn-action"><i class="fa-solid fa-paper-plane"></i> Request Equipment Issue</button>
+            </form>
+        </div>
+
+        <!-- Master Booking Log & Staff Return Verification Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-list-check"></i> <span id="bookingLogHeaderTitle">Equipment Bookings & Return Status</span> (<span id="bookingBadge">0</span>)</h2>
+                <p id="bookingLogSubText">Track active sessions and submit return requests</p>
+            </div>
+            <div class="table-responsive">
+                <table id="bookingTable">
+                    <thead>
+                        <tr>
+                            <th>Tx ID</th>
+                            <th>Student ID</th>
+                            <th>Equipment / Item</th>
+                            <th>Session Status</th>
+                            <th id="tableActionHeader">Action / Return Request</th>
+                        </tr>
+                    </thead>
+                    <tbody id="masterBookingTbody">
+                        <!-- Dynamic items populate here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- STAFF LOGIN MODAL -->
+<div id="staffLoginModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <h3><i class="fa-solid fa-lock"></i> Lab Assistant Login</h3>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;" id="modalLabSubText">Authenticating for Electronics Lab</p>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label style="font-size: 13px; font-weight: 600;">Staff Username:</label>
+            <input type="text" id="modalStaffUser" class="form-control" placeholder="Enter username (e.g., staff)" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label style="font-size: 13px; font-weight: 600;">Password PIN:</label>
+            <input type="password" id="modalStaffPass" class="form-control" placeholder="Enter PIN (e.g. 1234)">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="verifyModalLogin()" class="btn-action" style="flex: 1; background: #16a34a;">Login</button>
+            <button onclick="closeStaffLoginModal()" style="flex: 1; background: #e2e8f0; color: #334155; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUserRole = 'student';
+let currentSelectedLab = 'Electronics Lab';
+
+let labInventoryCatalog = {};
+let masterBookings = JSON.parse(localStorage.getItem('labsphere_bookings')) || [];
+
+let stockData = {};
+let itemNames = {};
+
+function saveToLocalStorage() {
+    localStorage.setItem('labsphere_bookings', JSON.stringify(masterBookings));
+}
+
+// Fetch inventory data from Java Backend on load
+function fetchInventoryFromServer() {
+    fetch('http://localhost:8080/api/items')
+        .then(response => response.json())
+        .then(data => {
+            labInventoryCatalog = {};
+            data.forEach(item => {
+                let lab = item.lab || 'Electronics Lab';
+                if (!labInventoryCatalog[lab]) {
+                    labInventoryCatalog[lab] = [];
+                }
+                labInventoryCatalog[lab].push({
+                    id: item.id,
+                    name: item.equipment,
+                    qty: parseInt(item.qty) || 0
+                });
+            });
+            initializeLabStock();
+            renderInventoryTable();
+            populateEquipmentDropdown();
+        })
+        .catch(err => {
+            console.error('Failed to fetch from Java backend, falling back to local storage:', err);
+            labInventoryCatalog = JSON.parse(localStorage.getItem('labsphere_catalog')) || {
+                "Electronics Lab": [], "Electrical Lab": [], "Digital Electronics Lab": [], "Physics Lab": [], "Chemistry Lab": []
+            };
+            initializeLabStock();
+            renderInventoryTable();
+            populateEquipmentDropdown();
+        });
+}
+
+function initializeLabStock() {
+    stockData = {};
+    itemNames = {};
+    if (!labInventoryCatalog[currentSelectedLab]) {
+        labInventoryCatalog[currentSelectedLab] = [];
+    }
+    let currentList = labInventoryCatalog[currentSelectedLab];
+    currentList.forEach(item => {
+        stockData[item.id] = item.qty;
+        itemNames[item.id] = item.name;
+    });
+}
+
+function selectRole(role) {
+    currentUserRole = role;
+    currentSelectedLab = document.getElementById('globalLabSelect').value;
+    document.getElementById('landingScreen').style.display = 'none';
+    
+    fetchInventoryFromServer();
+
+    document.getElementById('activeLabLabel').innerText = currentSelectedLab;
+    document.getElementById('statLabName').innerText = currentSelectedLab.replace(' Lab', '');
+
+    if(role === 'staff') {
+        document.getElementById('currentModeLabel').innerText = "Lab Assistant";
+        document.getElementById('roleBadgeText').innerText = currentSelectedLab + " Assistant";
+        document.getElementById('headerAvatar').innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+        document.getElementById('staffManualEntryBox').style.display = 'block';
+        document.getElementById('studentCheckoutContainer').style.display = 'none';
+        document.getElementById('pageMainTitle').innerText = currentSelectedLab + " - Stock & Return Verification";
+        document.getElementById('sidebarTabName').innerText = "Return Verification";
+        document.getElementById('bookingLogHeaderTitle').innerText = "Pending Return Verifications";
+        document.getElementById('bookingLogSubText').innerText = "Only items requested for return by students appear here for inspection";
+        document.getElementById('tableActionHeader').innerText = "Staff Inspection Actions";
+    } else {
+        document.getElementById('currentModeLabel').innerText = "Student";
+        document.getElementById('roleBadgeText').innerText = "Student User (" + currentSelectedLab + ")";
+        document.getElementById('headerAvatar').innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+        document.getElementById('staffManualEntryBox').style.display = 'none';
+        document.getElementById('studentCheckoutContainer').style.display = 'block';
+        document.getElementById('pageMainTitle').innerText = "Student Lab Session Portal - " + currentSelectedLab;
+        document.getElementById('sidebarTabName').innerText = "Equipment Booking";
+        document.getElementById('bookingLogHeaderTitle').innerText = "My Active Bookings & Return Status";
+        document.getElementById('bookingLogSubText').innerText = "Track active sessions and request returns when lab concludes";
+        document.getElementById('tableActionHeader').innerText = "Student Return Request";
+    }
+    renderBookingTable();
+    switchTab('dashboard');
+}
+
+function renderInventoryTable() {
+    const tbody = document.getElementById('inventoryTableBody');
+    tbody.innerHTML = '';
+    if (!labInventoryCatalog[currentSelectedLab]) {
+        labInventoryCatalog[currentSelectedLab] = [];
+    }
+    let currentList = labInventoryCatalog[currentSelectedLab];
+
+    if(currentList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">No inventory items found. Add items via staff portal.</td></tr>`;
+        return;
+    }
+
+    currentList.forEach(item => {
+        let tr = document.createElement('tr');
+        
+        let actionBtn = currentUserRole === 'staff' 
+            ? `<button onclick="deleteInventoryItem('${item.id}')" style="background: #dc2626; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"><i class="fa-solid fa-trash"></i> Delete</button>`
+            : `<span style="color: #64748b; font-size: 12px;">View Only</span>`;
+
+        tr.innerHTML = `
+            <td><strong>${item.id}</strong></td>
+            <td>${item.name}</td>
+            <td id="count-${item.id}">${stockData[item.id] !== undefined ? stockData[item.id] : item.qty} Units</td>
+            <td><span class="status-badge available"><i class="fa-solid fa-circle"></i> Available</span></td>
+            <td>${actionBtn}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function populateEquipmentDropdown() {
+    const eqSelect = document.getElementById('eqSelect');
+    eqSelect.innerHTML = '';
+    if (!labInventoryCatalog[currentSelectedLab]) {
+        labInventoryCatalog[currentSelectedLab] = [];
+    }
+    let currentList = labInventoryCatalog[currentSelectedLab];
+
+    currentList.forEach(item => {
+        let opt = document.createElement('option');
+        opt.value = item.id;
+        let qtyVal = stockData[item.id] !== undefined ? stockData[item.id] : item.qty;
+        opt.text = `${item.id} - ${item.name} (${qtyVal} Available)`;
+        eqSelect.appendChild(opt);
+    });
+}
+
+function openStaffLoginModal() {
+    let lab = document.getElementById('globalLabSelect').value;
+    document.getElementById('modalLabSubText').innerText = "Authenticating for " + lab;
+    document.getElementById('staffLoginModal').style.display = 'flex';
+}
+
+function closeStaffLoginModal() {
+    document.getElementById('staffLoginModal').style.display = 'none';
+    document.getElementById('modalStaffUser').value = '';
+    document.getElementById('modalStaffPass').value = '';
+}
+
+function verifyModalLogin() {
+    const user = document.getElementById('modalStaffUser').value.trim();
+    const pass = document.getElementById('modalStaffPass').value;
+
+    if(!user) {
+        alert('Please enter staff username!');
+        return;
+    }
+
+    if(pass === "1234" || pass === "admin") {
+        closeStaffLoginModal();
+        selectRole('staff');
+        alert('Staff Authentication Successful for ' + currentSelectedLab + '!');
+    } else {
+        alert('Invalid Password PIN! (Hint: use 1234)');
+    }
+}
+
+function returnToLanding() {
+    document.getElementById('landingScreen').style.display = 'flex';
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active-view'));
+    document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+    
+    document.getElementById('tab-' + tabName).classList.add('active-view');
+    if(tabName === 'dashboard') document.getElementById('navDash').classList.add('active');
+    if(tabName === 'inventory') document.getElementById('navInv').classList.add('active');
+    if(tabName === 'bookings') {
+        document.getElementById('navBook').classList.add('active');
+        renderBookingTable();
+    }
+}
+
+function addNewOrUpdateInventory(event) {
+    event.preventDefault();
+    let id = document.getElementById('manEqId').value.trim().toUpperCase();
+    let name = document.getElementById('manEqName').value.trim();
+    let qty = parseInt(document.getElementById('manEqQty').value);
+
+    if(!id || !name || isNaN(qty)) return;
+
+    stockData[id] = qty;
+    itemNames[id] = name;
+
+    if (!labInventoryCatalog[currentSelectedLab]) {
+        labInventoryCatalog[currentSelectedLab] = [];
+    }
+    let currentList = labInventoryCatalog[currentSelectedLab];
+    let existingIndex = currentList.findIndex(i => i.id === id);
+    if(existingIndex >= 0) {
+        currentList[existingIndex].name = name;
+        currentList[existingIndex].qty = qty;
+    } else {
+        currentList.push({ id: id, name: name, qty: qty });
+    }
+
+    fetch('http://localhost:8080/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, equipment: name, qty: qty, lab: currentSelectedLab })
+    })
+    .then(() => {
+        renderInventoryTable();
+        populateEquipmentDropdown();
+        alert(`Successfully added / updated ${id} (${name}) in ${currentSelectedLab}!`);
+        document.getElementById('manualStockForm').reset();
+        document.getElementById('manEqQty').value = 10;
+    })
+    .catch(err => {
+        console.error('DB Sync Error:', err);
+        alert('Error communicating with Java Backend server.');
+    });
+}
+
+function deleteInventoryItem(id) {
+    if(!confirm(`Are you sure you want to delete equipment ID: ${id}?`)) return;
+
+    let currentList = labInventoryCatalog[currentSelectedLab];
+    labInventoryCatalog[currentSelectedLab] = currentList.filter(item => item.id !== id);
+    
+    delete stockData[id];
+    delete itemNames[id];
+
+    fetch('http://localhost:8080/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, lab: currentSelectedLab })
+    })
+    .then(() => {
+        renderInventoryTable();
+        populateEquipmentDropdown();
+        alert(`Equipment ${id} successfully deleted from ${currentSelectedLab}!`);
+    })
+    .catch(err => {
+        console.error('DB Delete Sync Error:', err);
+        alert('Error connecting to backend for deletion.');
+    });
+}
+
+function handlecheckout(event) {
+    event.preventDefault();
+    const eq = document.getElementById('eqSelect').value;
+    const student = document.getElementById('studentId').value.trim();
+
+    if(!student || !eq) {
+        alert('Please select an equipment and enter your Student ID.');
+        return;
+    }
+
+    if(stockData[eq] <= 0) {
+        alert('Error: Selected equipment is currently Out of Stock in this lab!');
+        return;
+    }
+
+    stockData[eq]--;
+    document.getElementById(`count-${eq}`).innerText = stockData[eq] + " Units";
+
+    const txId = 'TXN-' + Math.floor(1000 + Math.random() * 9000);
+
+    masterBookings.push({
+        id: 'booking-item-' + Date.now(),
+        txId: txId,
+        studentId: student,
+        eqId: eq,
+        eqName: itemNames[eq],
+        lab: currentSelectedLab,
+        status: 'active',
+        fine: 0
+    });
+
+    fetch('http://localhost:8080/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eqId: eq, remainingQty: stockData[eq], lab: currentSelectedLab })
+    }).catch(err => console.error('DB Sync Error:', err));
+
+    saveToLocalStorage();
+    alert('Checkout Successful for ' + itemNames[eq] + '! (Tx ID: ' + txId + ')');
+    document.getElementById('expoCheckoutForm').reset();
+    renderBookingTable();
+    populateEquipmentDropdown();
+}
+
+function renderBookingTable() {
+    const tbody = document.getElementById('masterBookingTbody');
+    tbody.innerHTML = '';
+
+    let labFilteredBookings = masterBookings.filter(b => b.lab === currentSelectedLab);
+    let displayedList = labFilteredBookings;
+
+    if(currentUserRole === 'staff') {
+        displayedList = labFilteredBookings.filter(b => b.status === 'requested' || b.status === 'verified' || b.status === 'damaged');
+    }
+
+    let pendingCount = currentUserRole === 'staff' 
+        ? labFilteredBookings.filter(b => b.status === 'requested').length 
+        : labFilteredBookings.length;
+    
+    document.getElementById('bookingBadge').innerText = pendingCount;
+    document.getElementById('statActiveCount').innerText = labFilteredBookings.length + " Sessions";
+
+    if(displayedList.length === 0) {
+        let emptyMsg = currentUserRole === 'staff' 
+            ? "No pending return requests from students at the moment." 
+            : "No active equipment check-outs found for " + currentSelectedLab + ".";
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">${emptyMsg}</td></tr>`;
+        return;
+    }
+
+    displayedList.forEach(item => {
+        let tr = document.createElement('tr');
+        let statusBadgeHtml = '';
+        let actionHtml = '';
+
+        if(item.status === 'active') {
+            statusBadgeHtml = `<span class="status-badge stock">Active Session</span>`;
+            if(currentUserRole === 'student') {
+                actionHtml = `<button onclick="requestReturn('${item.txId}')" style="background: #2563eb; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;"><i class="fa-solid fa-arrow-rotate-left"></i> Request Return</button>`;
+            } else {
+                actionHtml = `<span style="color: #64748b; font-size: 12px;">Awaiting Student Return Request</span>`;
+            }
+        } 
+        else if(item.status === 'requested') {
+            statusBadgeHtml = `<span class="status-badge" style="background: #f59e0b; color: white;"><i class="fa-solid fa-clock"></i> Pending Staff Verification</span>`;
+            if(currentUserRole === 'student') {
+                actionHtml = `<span style="color: #d97706; font-size: 12px; font-weight: 600;">Return Requested. Hand over to Assistant.</span>`;
+            } else {
+                actionHtml = `
+                    <button onclick="verifyReturnOK('${item.txId}')" style="background: #16a34a; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;"><i class="fa-solid fa-check"></i> Approve Return</button>
+                    <button onclick="reportDamage('${item.txId}')" style="background: #dc2626; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;"><i class="fa-solid fa-triangle-exclamation"></i> Damaged (Fine)</button>
+                `;
+            }
+        }
+        else if(item.status === 'verified') {
+            statusBadgeHtml = `<span style="color: #16a34a; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Return Verified & Closed</span>`;
+            actionHtml = `<span style="color: #64748b; font-size: 12px;">Stock Restored</span>`;
+        }
+        else if(item.status === 'damaged') {
+            statusBadgeHtml = `<span style="color: #dc2626; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> Damaged (Fine: ₹${item.fine})</span>`;
+            actionHtml = `<span style="color: #64748b; font-size: 12px;">Logged for Recovery</span>`;
+        }
+
+        tr.innerHTML = `
+            <td><strong>${item.txId}</strong></td>
+            <td>${item.studentId}</td>
+            <td>${item.eqId} (${item.eqName})</td>
+            <td>${statusBadgeHtml}</td>
+            <td>${actionHtml}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function requestReturn(txId) {
+    let item = masterBookings.find(b => b.txId === txId);
+    if(item) {
+        item.status = 'requested';
+        saveToLocalStorage();
+        alert(`Return requested for Transaction ${txId}! Please hand over the item to the Lab Assistant for inspection.`);
+        renderBookingTable();
+    }
+}
+
+function verifyReturnOK(txId) {
+    let item = masterBookings.find(b => b.txId === txId);
+    if(item) {
+        item.status = 'verified';
+        
+        // സ്റ്റോക്ക് കൗണ്ട് തിരികെ കൂട്ടുക (Restock)
+        if(stockData[item.eqId] !== undefined) {
+            stockData[item.eqId]++;
+        } else {
+            stockData[item.eqId] = 1;
+        }
+
+        let currentList = labInventoryCatalog[item.lab];
+        if(currentList) {
+            let catItem = currentList.find(i => i.id === item.eqId);
+            if(catItem) {
+                catItem.qty = stockData[item.eqId];
+            }
+        }
+
+        let currentQtyToSend = stockData[item.eqId];
+        let currentItemName = itemNames[item.eqId] || item.eqId;
+
+        // ജാവ ബാക്ക്എൻഡിലേക്കും ഡാറ്റാബേസിലേക്കും അപ്ഡേറ്റ് ചെയ്ത കൗണ്ട് അയക്കുന്നു
+        fetch('http://localhost:8080/api/items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: item.eqId, equipment: currentItemName, qty: currentQtyToSend, lab: item.lab })
+        })
+        .then(() => {
+            saveToLocalStorage();
+            alert('Return verified successfully! Stock has been updated to ' + currentQtyToSend + '.');
+            renderBookingTable();
+            renderInventoryTable();
+            populateEquipmentDropdown();
+        })
+        .catch(err => {
+            console.error('DB Restock Sync Error:', err);
+            alert('Return verified locally, but failed to sync with Java backend.');
+        });
+    }
+}
+
+function reportDamage(txId) {
+    let fineAmount = prompt("Enter damage fine amount for this item (₹):", "150");
+    if(fineAmount === null) return;
+
+    let item = masterBookings.find(b => b.txId === txId);
+    if(item) {
+        item.status = 'damaged';
+        item.fine = fineAmount;
+        saveToLocalStorage();
+        alert(`Damage penalty of ₹${fineAmount} recorded successfully!`);
+        renderBookingTable();
+    }
+}
+</script>
+
+</body>
+</html>
