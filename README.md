@@ -1,4 +1,4 @@
-# 🔬 LabSphere
+# 🔬 LabSphere   
 
 > A centralized laboratory inventory and equipment usage management system designed to streamline checkout, monitor item conditions, and manage incident reporting and fines.
 
